@@ -13,25 +13,17 @@ Installation
 ------------
 Create virtual environment to install dependancies
 
-.. code-block:: sh
-
     python3 -m venv .env
 
 Activate the environment
-
-.. code-block:: sh
 
     source .env/bin/activate
 
 Install dependencies
 
-.. code-block:: sh
-
     pip install -r requirements.txt
 
 Now everything is set up, enable web server on a specific port using gunicorn
-
-.. code-block:: sh
 
     gunicorn application:api -b 0.0.0.0:8000
 
