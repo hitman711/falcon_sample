@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+    
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.7.8/angular.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+    
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Github Navigator</title>
+</head>
+<body ng-app='githubNavigator' ng-controller="searchController">
+    <div class="jumbotron">
+        <div class="container text-center">
+            <h3>Github Navigator</h3>
+            <form class="form-group" ng-submit="SearchEvent()">
+                <input 
+                    class='form-control'
+                    type='text' 
+                    ng-model='search.search_term' 
+                    placeholder="Search repository by name"
+                    ng-disabled='processing' />
+                    <br/>
+                    <input ng-disabled='processing' class="btn btn-primary" type='submit' name='Search' value='Search'>
+            </form>
+            <p ng-show='processing'>Fetching your data please wait</p>
+            <p ng-show='search_error'>{{search_error}}</p>
+        </div>
+    </div>
+    <div class="container">
+        <h1>{{search_key_word}}</h1>
+        <ul class="list-group">
+            <li 
+                class="list-group-item"
+                style="margin-bottom:5px"
+                ng-repeat="(key, repository) in search_list">
+                <h2>{{key + 1}}. {{repository.respository_name}}</h2>
+                <h3>Created {{repository.created_at | date: 'MM/dd/yyyy  HH:mm a'}}</h3>
+                <a href="{{repository.owner_url}}" target="blank">
+                    <img 
+                        src="{{repository.avatar_url}}"
+                        alt="avatar"
+                        height="42" width="42" />
+                </a>
+                <h3>Last Commit</h3>
+                <p style="bold">{{repository.sha}} &nbsp; {{repository.commit_message}} &nbsp; {{repository.commit_author_name}}</p>
+            </li>
+        </ul>
+    </div>
+</body>
+<script>
+var app = angular.module("githubNavigator", []);
+
+app.controller("searchController", function($scope, $http) {
+    $scope.search = {
+        'search_term':''
+    };
+    $scope.search_error = '';
+    $scope.search_list = [];
+    $scope.search_key_word = '';
+    $scope.processing = false;
+    $scope.url = '/api';
+    $scope.SearchEvent = function(){
+        $scope.processing = true;
+        $scope.search_error = '';
+        $scope.search_key_word = '';
+        var url = $scope.url;
+        if ($scope.search.search_term){
+            query_param = new URLSearchParams($scope.search);
+            url = url + '?' + query_param;
+        }
+        $http({
+            'method':'GET',
+            'url': url,
+            'content-type':'application/json'
+        }).then(function success(response){
+            $scope.search_list = response.data;
+            $scope.processing = false;
+            $scope.search_key_word = $scope.search.search_term;
+        }, function error(response){
+            if ("non_field_errors" in response.data) {
+                $scope.search_error = response.data["non_field_errors"][0];
+                $scope.processing = false;
+                $scope.search_key_word = $scope.search.search_term;
+            } else {
+                angular.forEach(response.data, function (value, key) {
+                    $scope.search_error = value[0];
+                    $scope.processing = false;
+                    $scope.search_key_word = $scope.search.search_term;
+                });
+            }
+        });
+    }
+});
+</script>
+
+</html>
